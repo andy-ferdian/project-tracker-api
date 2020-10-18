@@ -1,3 +1,4 @@
+import pdb
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
@@ -57,8 +58,39 @@ class BoardColumnSerializer(serializers.ModelSerializer):
 
 
 class ProjectSerializer(serializers.ModelSerializer):
-    board_column = BoardColumnSerializer(many=True, required=False)
+    # board_column = BoardColumnSerializer(many=True, required=False)
+    board_columns = serializers.SerializerMethodField(source='get_board_columns')
+    task_cards = serializers.SerializerMethodField(source='get_task_cards')
+    column_order = serializers.SerializerMethodField(source='get_column_order')
 
     class Meta:
         model = Project
-        fields = ('name', 'board_column')
+        fields = ('name', 'task_cards', 'board_columns', 'column_order')
+
+    def get_task_cards(self, instance):
+        # board_columns = instance.board_column.all()
+        task_cards = Task.objects.filter(project=instance)
+        tasks = {}
+        for task in task_cards:
+            tasks[task.name] = {
+                                    'id' : task.name,
+                                    'content' : task.description
+                                }
+        return tasks
+    
+    def get_board_columns(self, instance):
+        board_columns = instance.board_column.all()
+        columns = {}
+        for board_column in board_columns:
+            columns[board_column.id] = {
+                                            'id' : board_column.id,
+                                            'title' : board_column.name,
+                                            'taskIds' : [task.name for task in board_column.task.all()]
+                                        }
+        return columns
+
+    def get_column_order(self, instance):
+        board_columns = instance.board_column.all()
+        column_order = [board_column.id for board_column in board_columns]
+        
+        return column_order
