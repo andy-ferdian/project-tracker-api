@@ -59,15 +59,15 @@ class BoardColumnSerializer(serializers.ModelSerializer):
 
 class ProjectSerializer(serializers.ModelSerializer):
     # board_column = BoardColumnSerializer(many=True, required=False)
-    board_columns = serializers.SerializerMethodField(source='get_board_columns')
-    task_cards = serializers.SerializerMethodField(source='get_task_cards')
-    column_order = serializers.SerializerMethodField(source='get_column_order')
+    tasks = serializers.SerializerMethodField(source='get_tasks')
+    cards = serializers.SerializerMethodField(source='get_cards')
+    cardOrder = serializers.SerializerMethodField(source='get_cardOrder')
 
     class Meta:
         model = Project
-        fields = ('name', 'task_cards', 'board_columns', 'column_order')
+        fields = ('name', 'tasks', 'cards', 'cardOrder')
 
-    def get_task_cards(self, instance):
+    def get_tasks(self, instance):
         # board_columns = instance.board_column.all()
         task_cards = Task.objects.filter(project=instance)
         tasks = {}
@@ -78,7 +78,7 @@ class ProjectSerializer(serializers.ModelSerializer):
                                 }
         return tasks
     
-    def get_board_columns(self, instance):
+    def get_cards(self, instance):
         board_columns = instance.board_column.all()
         columns = {}
         for board_column in board_columns:
@@ -89,7 +89,7 @@ class ProjectSerializer(serializers.ModelSerializer):
                                         }
         return columns
 
-    def get_column_order(self, instance):
+    def get_cardOrder(self, instance):
         board_columns = instance.board_column.all()
         column_order = [board_column.id for board_column in board_columns]
         
